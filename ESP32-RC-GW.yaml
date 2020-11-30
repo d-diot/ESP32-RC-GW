@@ -22,6 +22,12 @@ api:
 
 ota:
 
+sensor:
+# Wifi signal monitor
+  - platform: wifi_signal
+    name: "ESP32-RC-GW WiFi Signal"
+    update_interval: 60s
+
 remote_receiver:
   pin: GPIO32
   dump: rc_switch
@@ -30,19 +36,61 @@ remote_receiver:
   filter: 250us
   idle: 4ms
   buffer_size: 2kb
+  on_rc_switch:
+    - switch.turn_on: rc_input_led
+    - delay: 200ms
+    - switch.turn_off: rc_input_led
+
+remote_transmitter:
+  pin: GPIO33
+  carrier_duty_percent: 100%
 
 switch:
+# Example smart plug 1 status switch
   - platform: template
-    name: "Avidsen Smart Plug"
+    name: "Avidsen Smart Plug 1"
     id: "plug_1"
+    icon: "mdi:power-socket-eu"
+    # Example transmit Smart Plug 1 turn ON code
+    turn_on_action:
+      remote_transmitter.transmit_rc_switch_raw:
+        protocol: 1
+        code: "010001000100010101010001"
+        repeat:
+          times: 3
+          wait_time: 200ms 
+    # Example transmit Smart Plug 1 turn OFF code
+    turn_off_action:
+      remote_transmitter.transmit_rc_switch_raw:
+        protocol: 1
+        code: "010001000100010101010100"
+        repeat:
+          times: 3
+          wait_time: 200ms 
+      
+# Receiver Led
+  - platform: gpio
+    pin: GPIO27
+    id: 'rc_input_led'
+    internal: true
 
 
 binary_sensor:
+# Example Remote ON button press detection on remote of smart plug 1
   - platform: remote_receiver
-    name: "Smart Plug ON"
+    name: "Receiver: Smart Plug 1 ON"
     rc_switch_raw:
       code: "010001000100010101010001"
       protocol: 1
     on_press:
       then:
         - switch.turn_on: plug_1
+# Example Remote OFF button press detection on remote of smart plug 1
+  - platform: remote_receiver
+    name: "Receiver: Smart Plug 1 OFF"
+    rc_switch_raw:
+      code: "010001000100010101010100"
+      protocol: 1
+    on_press:
+      then:
+        - switch.turn_off: plug_1
