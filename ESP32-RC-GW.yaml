@@ -1,0 +1,48 @@
+esphome:
+  name: esp32rcgw
+  platform: ESP32
+  board: nodemcu-32s
+
+wifi:
+  ssid: "wifihome"
+  password: "storagegilson"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Esp32Rcgw Fallback Hotspot"
+    password: "oMwHOw9tZ7G6"
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+
+remote_receiver:
+  pin: GPIO32
+  dump: rc_switch
+  # Settings to optimize recognition of RF devices
+  tolerance: 50%
+  filter: 250us
+  idle: 4ms
+  buffer_size: 2kb
+
+switch:
+  - platform: template
+    name: "Avidsen Smart Plug"
+    id: "plug_1"
+
+
+binary_sensor:
+  - platform: remote_receiver
+    name: "Smart Plug ON"
+    rc_switch_raw:
+      code: "010001000100010101010001"
+      protocol: 1
+    on_press:
+      then:
+        - switch.turn_on: plug_1
