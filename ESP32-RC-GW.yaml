@@ -28,11 +28,12 @@ sensor:
     name: "ESP32-RC-GW WiFi Signal"
     update_interval: 60s
 
+# Receiver configuration
 remote_receiver:
   pin:
     number: GPIO32
-    mode: INPUT_PULLUP
-    inverted: true
+#    mode: INPUT_PULLUP
+#    inverted: true
   dump: rc_switch
   # Settings to optimize recognition of RF devices
   tolerance: 50%
@@ -40,63 +41,112 @@ remote_receiver:
   idle: 4ms
   buffer_size: 2kb
 
+# Transmitter configuration
 remote_transmitter:
   pin: GPIO33
   carrier_duty_percent: 100%
 
+
+########################### EXAMPLE SMART PLUG CONFIG ###########################################
+
+
 switch:
-# Example smart plug 1 status switch
+# Receiver Led switch
+  - platform: gpio
+    pin: GPIO27
+    id: 'rc_input_led'
+    internal: true
+# Block transmission switch
+  - platform: template
+    name: "Block transmission switch"
+    id: 'block_sw'
+    internal: true
+    optimistic: true
+# Smart plug switch    
   - platform: template
     name: "Avidsen Smart Plug 1"
     id: "plug_1"
     icon: "mdi:power-socket-eu"
     optimistic: true
-    # Example transmit Smart Plug 1 turn ON code
+    # Turn ON code
     turn_on_action:
-      remote_transmitter.transmit_rc_switch_raw:
-        protocol: 6
-        code: "010001000100010101010001"
-        repeat:
-          times: 3
-          wait_time: 20ms 
-    # Example transmit Smart Plug 1 turn OFF code
+      then: 
+        - delay: 500ms
+        - if: 
+            condition: 
+              switch.is_off: block_sw
+            then:        
+              - logger.log: "Evaluated Block switch as OFF, transmitting RF code"
+              - remote_transmitter.transmit_rc_switch_type_a:
+                  group: '01010'
+                  device: '10000'
+                  state: on
+                  protocol: 1
+#                  repeat: 
+#                    times: 3
+#                    wait_time: 80ms
+        - if: 
+            condition: 
+              switch.is_on: block_sw
+            then:        
+              - logger.log: "Evaluated Block switch as ON, flipping it"
+              - switch.turn_off: block_sw
+    # Turn OFF code
     turn_off_action:
-      remote_transmitter.transmit_rc_switch_raw:
-        protocol: 6
-        code: "010001000100010101010100"
-        repeat:
-          times: 3
-          wait_time: 20ms 
-      
-# Receiver Led
-  - platform: gpio
-    pin: GPIO27
-    id: 'rc_input_led'
-    internal: true
+      then: 
+        - delay: 500ms
+        - if: 
+            condition: 
+              switch.is_off: block_sw
+            then:        
+              - logger.log: "Evaluated Block switch as OFF, transmitting RF code"
+              - remote_transmitter.transmit_rc_switch_type_a:
+                  group: '01010'
+                  device: '10000'
+                  state: off
+                  protocol: 1
+#                  repeat: 
+#                    times: 3
+#                    wait_time: 80ms
+        - if: 
+            condition: 
+              switch.is_on: block_sw
+            then:      
+              - logger.log: "Evaluated Block switch as ON, flipping it"
+              - switch.turn_off: block_sw  
 
-
+# Example smart plug 1 code detection
 binary_sensor:
-# Example Remote ON button press detection on remote of smart plug 1
+# Remote ON 
   - platform: remote_receiver
     name: "Receiver: Smart Plug 1 ON"
-    rc_switch_raw:
-      code: "010001000100010101010001"
-      protocol: 6
+    internal: true
+    rc_switch_type_a:
+      group: '01010'
+      device: '10000'
+      state: on
+      protocol: 1
     on_press:
       then:
-        - switch.turn_on: plug_1
+        - switch.turn_on: block_sw 
         - switch.turn_on: rc_input_led
         - delay: 100ms
-        - switch.turn_off: rc_input_led
-# Example Remote OFF button press detection on remote of smart plug 1
+        - switch.turn_off: rc_input_led 
+        - switch.turn_on: plug_1
+       
+# Remote OFF
   - platform: remote_receiver
     name: "Receiver: Smart Plug 1 OFF"
-    rc_switch_raw:
-      code: "010001000100010101010100"
-      protocol: 6
+    internal: true
+    rc_switch_type_a:
+      group: '01010'
+      device: '10000'
+      state: off
+      protocol: 1
     on_press:
       then:
-        - switch.turn_off: plug_1
+        - switch.turn_on: block_sw 
         - switch.turn_on: rc_input_led
         - delay: 100ms
         - switch.turn_off: rc_input_led
+        - switch.turn_off: plug_1
