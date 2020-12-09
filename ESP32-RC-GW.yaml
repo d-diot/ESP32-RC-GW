@@ -82,9 +82,9 @@ switch:
                   device: '10000'
                   state: on
                   protocol: 1
-#                  repeat: 
-#                    times: 3
-#                    wait_time: 80ms
+                  repeat: 
+                    times: 10
+                    wait_time: 0ms
         - if: 
             condition: 
               switch.is_on: block_sw
@@ -105,9 +105,9 @@ switch:
                   device: '10000'
                   state: off
                   protocol: 1
-#                  repeat: 
-#                    times: 3
-#                    wait_time: 80ms
+                  repeat: 
+                    times: 10
+                    wait_time: 0ms
         - if: 
             condition: 
               switch.is_on: block_sw
