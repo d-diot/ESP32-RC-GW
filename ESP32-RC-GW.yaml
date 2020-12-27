@@ -9,8 +9,8 @@ wifi:
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
-    ssid: "Esp32Rcgw Fallback Hotspot"
-    password: "oMwHOw9tZ7G6"
+    ssid: "Esp32Rcgw Hotspot"
+    password: "d-diot.com"
 
 captive_portal:
 
