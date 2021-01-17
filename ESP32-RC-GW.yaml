@@ -4,8 +4,8 @@ esphome:
   board: nodemcu-32s
 
 wifi:
-  ssid: "wifihome"
-  password: "storagegilson"
+  ssid: "YOUR_WIFI_NET_NAME"
+  password: "YOUR_WIFI_PASSWORD"
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
